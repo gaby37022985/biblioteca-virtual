@@ -1,0 +1,130 @@
+from abc import ABC, abstractmethod
+
+# Classe abstrata Pessoa
+class Pessoa(ABC):
+    def __init__(self, nome, idade, matricula):
+        self.nome = nome
+        self.idade = idade
+        self.matricula = matricula
+
+    @abstractmethod
+    def exibir_informacoes(self):
+        pass
+
+# Classe UsuarioComum herdando de Pessoa
+class UsuarioComum(Pessoa):
+    def __init__(self, nome, idade, matricula):
+        super().__init__(nome, idade, matricula)
+        self.livros_emprestados = []
+
+    def exibir_informacoes(self):
+        print(f"Usuário: {self.nome}, Idade: {self.idade}, Matrícula: {self.matricula}")
+        print("Livros emprestados:", ", ".join([livro.titulo for livro in self.livros_emprestados]) or "Nenhum")
+
+    def emprestar_livro(self, livro):
+        if len(self.livros_emprestados) < 3:
+            if livro.emprestar():
+                self.livros_emprestados.append(livro)
+                print(f"Livro '{livro.titulo}' emprestado para {self.nome}.")
+            else:
+                print(f"O livro '{livro.titulo}' não está disponível.")
+        else:
+            print("Você já atingiu o limite de 3 livros emprestados.")
+
+    def devolver_livro(self, livro):
+        if livro in self.livros_emprestados:
+            livro.devolver()
+            self.livros_emprestados.remove(livro)
+            print(f"Livro '{livro.titulo}' devolvido por {self.nome}.")
+        else:
+            print(f"O livro '{livro.titulo}' não está em sua lista de empréstimos.")
+
+# Classe Administrador herdando de Pessoa
+class Administrador(Pessoa):
+    def __init__(self, nome, idade, matricula):
+        super().__init__(nome, idade, matricula)
+
+    def exibir_informacoes(self):
+        print(f"Administrador: {self.nome}, Idade: {self.idade}, Matrícula: {self.matricula}")
+
+    def cadastrar_livro(self, titulo, autor, ano):
+        return Livro(titulo, autor, ano)
+
+# Classe abstrata ItemBiblioteca
+class ItemBiblioteca(ABC):
+    def __init__(self, titulo, autor):
+        self.titulo = titulo
+        self.autor = autor
+        self.disponivel = True
+
+    @abstractmethod
+    def exibir_detalhes(self):
+        pass
+
+# Classe Livro herdando de ItemBiblioteca
+class Livro(ItemBiblioteca):
+    def __init__(self, titulo, autor, ano):
+        super().__init__(titulo, autor)
+        self.ano = ano
+
+    def emprestar(self):
+        if self.disponivel:
+            self.disponivel = False
+            return True
+        return False
+
+    def devolver(self):
+        self.disponivel = True
+
+    def exibir_detalhes(self):
+        status = "Disponível" if self.disponivel else "Indisponível"
+        print(f"Livro: {self.titulo}, Autor: {self.autor}, Ano: {self.ano}, Status: {status}")
+
+# Relatórios e funções auxiliares
+def exibir_livros_disponiveis(livros):
+    print("\nLivros disponíveis:")
+    for livro in livros:
+        if livro.disponivel:
+            livro.exibir_detalhes()
+
+def exibir_usuarios_com_livros(usuarios):
+    print("\nUsuários com livros emprestados:")
+    for usuario in usuarios:
+        if usuario.livros_emprestados:
+            usuario.exibir_informacoes()
+
+# Exemplo de uso
+if __name__ == "__main__":
+    # Criar administrador
+    admin = Administrador("Ana", 35, "A001")
+
+    # Cadastrar livros
+    livro1 = admin.cadastrar_livro("1984", "George Orwell", 1949)
+    livro2 = admin.cadastrar_livro("O Senhor dos Anéis", "J.R.R. Tolkien", 1954)
+    livro3 = admin.cadastrar_livro("Dom Quixote", "Miguel de Cervantes", 1605)
+
+    # Lista de livros
+    livros = [livro1, livro2, livro3]
+
+    # Criar usuários
+    usuario1 = UsuarioComum("João", 25, "U001")
+    usuario2 = UsuarioComum("Maria", 30, "U002")
+
+    # Lista de usuários
+    usuarios = [usuario1, usuario2]
+
+    # Empréstimos
+    usuario1.emprestar_livro(livro1)
+    usuario1.emprestar_livro(livro2)
+    usuario2.emprestar_livro(livro3)
+
+    # Exibir relatórios
+    exibir_livros_disponiveis(livros)
+    exibir_usuarios_com_livros(usuarios)
+
+    # Devoluções
+    usuario1.devolver_livro(livro1)
+
+    # Relatórios após devolução
+    exibir_livros_disponiveis(livros)
+    exibir_usuarios_com_livros(usuarios)
